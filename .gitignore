@@ -1,0 +1,5 @@
+*.pkl
+*.csv
+data/
+__pycache__/
+.streamlit/
