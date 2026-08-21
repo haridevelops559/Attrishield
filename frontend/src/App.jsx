@@ -1,20 +1,120 @@
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom'
+
+import AppShell from './components/layout/AppShell'
+import Dashboard from './pages/Dashboard'
+import IndividualPrediction from './pages/IndividualPrediction'
+import Login from './pages/Login'
+import ProtectedRoute from './routes/ProtectedRoute'
+import { AuthProvider } from './context/AuthContext'
+
 function App() {
   return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <section className="text-center">
-        <p className="text-sm font-medium text-brand-600">
-          AttriShield HR
-        </p>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route
+            path="/login"
+            element={<Login />}
+          />
 
-        <h1 className="mt-2 text-4xl font-bold text-slate-900">
-          Employee Attrition Intelligence
-        </h1>
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
 
-        <p className="mt-4 text-slate-600">
-          React frontend is running successfully.
-        </p>
-      </section>
-    </main>
+            <Route
+              path="/predict"
+              element={<IndividualPrediction />}
+            />
+
+            <Route
+              path="/batches"
+              element={
+                <PlaceholderPage title="Batch Inference" />
+              }
+            />
+
+            <Route
+              path="/analytics"
+              element={
+                <PlaceholderPage title="Analytics" />
+              }
+            />
+
+            <Route
+              path="/features"
+              element={
+                <PlaceholderPage title="Feature Store" />
+              }
+            />
+
+            <Route
+              path="/insights"
+              element={
+                <PlaceholderPage title="AI Insights" />
+              }
+            />
+
+            <Route
+              path="/monitoring"
+              element={
+                <PlaceholderPage title="Monitoring" />
+              }
+            />
+          </Route>
+
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to="/dashboard"
+                replace
+              />
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to="/dashboard"
+                replace
+              />
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  )
+}
+
+function PlaceholderPage({ title }) {
+  return (
+    <section>
+      <p className="text-sm font-medium text-brand-600">
+        AttriShield HR
+      </p>
+
+      <h1 className="mt-1 text-2xl font-bold text-slate-900">
+        {title}
+      </h1>
+
+      <p className="mt-2 text-sm text-slate-600">
+        This page will be implemented in a later step.
+      </p>
+    </section>
   )
 }
 
