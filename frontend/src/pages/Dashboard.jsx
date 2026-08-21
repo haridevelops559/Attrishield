@@ -1,39 +1,13 @@
-import { useEffect, useState } from 'react'
-import { getModelInfo } from '../services/api'
+import { useModelInfo } from '../hooks/useModelInfo'
 
 function Dashboard() {
-  const [modelInfo, setModelInfo] = useState(null)
-  const [status, setStatus] = useState('loading')
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    let ignore = false
-
-    async function loadModelInfo() {
-      try {
-        setStatus('loading')
-        setError(null)
-
-        const data = await getModelInfo()
-
-        if (!ignore) {
-          setModelInfo(data)
-          setStatus('success')
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err.message)
-          setStatus('error')
-        }
-      }
-    }
-
-    loadModelInfo()
-
-    return () => {
-      ignore = true
-    }
-  }, [])
+  const {
+    data: modelInfo,
+    isPending,
+    isError,
+    error,
+    isFetching,
+  } = useModelInfo()
 
   return (
     <section className="mx-auto max-w-7xl">
@@ -73,30 +47,41 @@ function Dashboard() {
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="font-semibold text-slate-900">
-            Model Status
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-slate-900">
+              Model Status
+            </h2>
+
+            {isFetching && !isPending && (
+              <span className="text-xs text-slate-400">
+                Refreshing...
+              </span>
+            )}
+          </div>
 
           <div className="mt-6">
-            {status === 'loading' && (
+            {isPending && (
               <p className="text-sm text-slate-500">
                 Loading model information...
               </p>
             )}
 
-            {status === 'error' && (
-              <div className="rounded-lg bg-red-50 p-4">
+            {isError && (
+              <div
+                role="alert"
+                className="rounded-lg bg-red-50 p-4"
+              >
                 <p className="text-sm font-medium text-red-700">
                   Unable to load model information.
                 </p>
 
                 <p className="mt-1 text-xs text-red-600">
-                  {error}
+                  {error.message}
                 </p>
               </div>
             )}
 
-            {status === 'success' && (
+            {modelInfo && (
               <pre className="max-h-80 overflow-auto rounded-lg bg-slate-50 p-4 text-xs text-slate-700">
                 {JSON.stringify(modelInfo, null, 2)}
               </pre>
@@ -111,7 +96,10 @@ function Dashboard() {
 function MetricCard({ label, value }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5">
-      <p className="text-sm text-slate-500">{label}</p>
+      <p className="text-sm text-slate-500">
+        {label}
+      </p>
+
       <p className="mt-2 text-2xl font-bold text-slate-900">
         {value}
       </p>

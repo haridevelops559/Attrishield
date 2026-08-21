@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { predictIndividualEmployee } from '../services/api'
+import { usePredictEmployee } from '../hooks/usePredictEmployee'
 
 const initialFormData = {
   Age: 35,
@@ -37,9 +37,15 @@ const initialFormData = {
 function IndividualPrediction() {
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
-  const [status, setStatus] = useState('idle')
-  const [prediction, setPrediction] = useState(null)
-  const [submitError, setSubmitError] = useState(null)
+
+  const {
+    mutateAsync: predictEmployee,
+    data: prediction,
+    isPending,
+    isError,
+    error,
+    reset,
+  } = usePredictEmployee()
 
   function handleChange(event) {
     const { name, value, type } = event.target
@@ -86,24 +92,19 @@ function IndividualPrediction() {
     const nextErrors = validate()
 
     setErrors(nextErrors)
-    setSubmitError(null)
-    setPrediction(null)
 
     if (Object.keys(nextErrors).length > 0) {
-      setStatus('idle')
+      reset()
       return
     }
 
+    reset()
+
     try {
-      setStatus('submitting')
-
-      const result = await predictIndividualEmployee(formData)
-
-      setPrediction(result)
-      setStatus('success')
-    } catch (error) {
-      setSubmitError(error.message)
-      setStatus('error')
+      await predictEmployee(formData)
+    } catch {
+      // TanStack Query exposes the mutation error through `error`.
+      // The UI renders it using `isError` and `error`.
     }
   }
 
@@ -434,13 +435,16 @@ function IndividualPrediction() {
         </FormSection>
 
         <div className="flex items-center justify-end gap-4">
-          {status === 'error' && (
-            <p className="text-sm text-red-600">
-              {submitError}
+          {isError && (
+            <p
+              role="alert"
+              className="text-sm text-red-600"
+            >
+              {error?.message || 'Prediction failed.'}
             </p>
           )}
 
-          {status === 'success' && (
+          {prediction && !isError && (
             <p className="text-sm font-medium text-green-600">
               Prediction completed.
             </p>
@@ -448,10 +452,10 @@ function IndividualPrediction() {
 
           <button
             type="submit"
-            disabled={status === 'submitting'}
+            disabled={isPending}
             className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {status === 'submitting'
+            {isPending
               ? 'Running Prediction...'
               : 'Run Prediction'}
           </button>
