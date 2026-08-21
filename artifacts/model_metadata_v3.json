@@ -1,0 +1,42 @@
+{
+  "model_version": "v3_engineered_without_raw_overtime",
+  "feature_version": "engineered_features_without_raw_overtime",
+  "raw_overtime_retained": false,
+  "seed": 42,
+  "test_size": 0.2,
+  "cv_folds": 5,
+  "model_name": "XGBoost",
+  "selected_threshold": 0.15,
+  "threshold_selection_method": "5-fold out-of-fold training predictions",
+  "business_cost_assumption": {
+    "false_negative_cost": 5,
+    "false_positive_cost": 1
+  },
+  "cv_metrics": {
+    "accuracy_mean": 0.875849,
+    "precision_mean": 0.723728,
+    "recall_mean": 0.389474,
+    "f1_mean": 0.498753,
+    "roc_auc_mean": 0.816203,
+    "pr_auc_mean": 0.625005
+  },
+  "test_metrics": {
+    "accuracy": 0.7789115646258503,
+    "precision": 0.38461538461538464,
+    "recall": 0.6382978723404256,
+    "f1": 0.48,
+    "roc_auc": 0.8057541562580756,
+    "pr_auc": 0.5439645554460173,
+    "brier_score": 0.10486069797708254,
+    "expected_calibration_error": 0.05637405240008621
+  },
+  "feature_engineering": [
+    "IncomePerJobLevel",
+    "PromotionStagnationRatio",
+    "ManagerTenureRatio",
+    "RoleTenureRatio",
+    "OverTimeBinary",
+    "CommuteOvertimeBurden",
+    "EarlyCareerFlag"
+  ]
+}

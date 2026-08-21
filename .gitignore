@@ -1,0 +1,40 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Build output
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local generated snapshots
+directory_snapshot.txt
+backend_tree.txt
+frontend_tree.txt
+
+# Logs
+*.log
