@@ -8,72 +8,55 @@ import {
 import AppShell from './components/layout/AppShell'
 import Dashboard from './pages/Dashboard'
 import IndividualPrediction from './pages/IndividualPrediction'
-import Login from './pages/Login'
-import ProtectedRoute from './routes/ProtectedRoute'
-import { AuthProvider } from './context/AuthContext'
+import BatchInference from './pages/BatchInference'
 
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
+      <AppShell>
         <Routes>
           <Route
-            path="/login"
-            element={<Login />}
+            path="/dashboard"
+            element={<Dashboard />}
           />
 
           <Route
+            path="/predict"
+            element={<IndividualPrediction />}
+          />
+
+          <Route
+            path="/batches"
+            element={<BatchInference />}
+          />
+
+          <Route
+            path="/analytics"
             element={
-              <ProtectedRoute>
-                <AppShell />
-              </ProtectedRoute>
+              <PlaceholderPage title="Analytics" />
             }
-          >
-            <Route
-              path="/dashboard"
-              element={<Dashboard />}
-            />
+          />
 
-            <Route
-              path="/predict"
-              element={<IndividualPrediction />}
-            />
+          <Route
+            path="/features"
+            element={
+              <PlaceholderPage title="Feature Store" />
+            }
+          />
 
-            <Route
-              path="/batches"
-              element={
-                <PlaceholderPage title="Batch Inference" />
-              }
-            />
+          <Route
+            path="/insights"
+            element={
+              <PlaceholderPage title="AI Insights" />
+            }
+          />
 
-            <Route
-              path="/analytics"
-              element={
-                <PlaceholderPage title="Analytics" />
-              }
-            />
-
-            <Route
-              path="/features"
-              element={
-                <PlaceholderPage title="Feature Store" />
-              }
-            />
-
-            <Route
-              path="/insights"
-              element={
-                <PlaceholderPage title="AI Insights" />
-              }
-            />
-
-            <Route
-              path="/monitoring"
-              element={
-                <PlaceholderPage title="Monitoring" />
-              }
-            />
-          </Route>
+          <Route
+            path="/monitoring"
+            element={
+              <PlaceholderPage title="Monitoring" />
+            }
+          />
 
           <Route
             path="/"
@@ -95,7 +78,7 @@ function App() {
             }
           />
         </Routes>
-      </AuthProvider>
+      </AppShell>
     </BrowserRouter>
   )
 }

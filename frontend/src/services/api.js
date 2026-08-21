@@ -106,3 +106,48 @@ export async function predictIndividualEmployee(employeeData) {
 
   return result.data
 }
+
+export async function getBatches(limit = 50, skip = 0) {
+  return apiRequest(`/batches?limit=${limit}&skip=${skip}`)
+}
+
+export async function getBatchStatus(batchId) {
+  return apiRequest(`/batches/${batchId}`)
+}
+
+export async function createBatch(file) {
+  const token = getAccessToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const headers = {}
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${API_BASE_URL}/batches`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  })
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}`
+
+    try {
+      const body = await response.json()
+
+      if (body.detail) {
+        message = body.detail
+      }
+    } catch {
+      // Keep default error message.
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
