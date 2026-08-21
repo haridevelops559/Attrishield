@@ -1,3 +1,8 @@
+import {
+  ModelInfoSchema,
+  PredictionResponseSchema,
+} from '../schemas/apiSchemas'
+
 const API_BASE_URL = '/api/v1'
 
 export async function apiRequest(path, options = {}) {
@@ -27,7 +32,7 @@ export async function apiRequest(path, options = {}) {
         message = body.detail
       }
     } catch {
-      // Keep default HTTP error message.
+      // Keep the default HTTP error message.
     }
 
     throw new Error(message)
@@ -61,13 +66,43 @@ export function loginRequest(email, password) {
   })
 }
 
-export function getModelInfo() {
-  return apiRequest('/model/info')
+export async function getModelInfo() {
+  const response = await apiRequest('/model/info')
+
+  const result = ModelInfoSchema.safeParse(response)
+
+  if (!result.success) {
+    console.error(
+      'Invalid model info API response:',
+      result.error.issues,
+    )
+
+    throw new Error(
+      'The model service returned an invalid response.',
+    )
+  }
+
+  return result.data
 }
 
-export function predictIndividualEmployee(employeeData) {
-  return apiRequest('/inference/predict', {
+export async function predictIndividualEmployee(employeeData) {
+  const response = await apiRequest('/inference/predict', {
     method: 'POST',
     body: JSON.stringify(employeeData),
   })
+
+  const result = PredictionResponseSchema.safeParse(response)
+
+  if (!result.success) {
+    console.error(
+      'Invalid prediction API response:',
+      result.error.issues,
+    )
+
+    throw new Error(
+      'The prediction service returned an invalid response.',
+    )
+  }
+
+  return result.data
 }
