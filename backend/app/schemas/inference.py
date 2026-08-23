@@ -3,7 +3,7 @@ Inference Request & Response Schemas.
 Defines input employee attributes and prediction output contracts.
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -62,3 +62,22 @@ class BatchPredictionSummary(BaseModel):
     average_latency_ms: float
     model_version: str
     threshold_used: float
+
+class PredictionDetailResponse(BaseModel):
+    prediction_id: str
+    batch_id: Optional[str] = None
+    mode: str
+
+    attrition_probability: float
+    attrition_prediction: int
+    selected_threshold: float
+    risk_recommendation: str
+
+    model_version: str
+    feature_version: str
+    latency_ms: float
+
+    engineered_features: Dict[str, Any]
+
+    created_by: Optional[str] = None
+    created_at: Optional[str] = None

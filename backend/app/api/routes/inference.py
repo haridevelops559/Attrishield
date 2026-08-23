@@ -4,7 +4,18 @@ Executes single-record inference using canonical V3 feature engineering and XGBo
 """
 
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+)
+
+from backend.app.schemas.inference import (
+    RawEmployeeInput,
+    PredictionResult,
+    PredictionDetailResponse,
+)
 from pymongo.database import Database
 from backend.app.schemas.inference import RawEmployeeInput, PredictionResult
 from backend.app.ml.inference import predict_single_employee
@@ -47,3 +58,32 @@ def predict_individual_employee(
     repo.insert_one(pred_doc)
 
     return result
+
+@router.get(
+    "/predictions/{prediction_id}",
+    response_model=PredictionDetailResponse,
+)
+def get_prediction(
+    prediction_id: str,
+    database: Optional[Database] = Depends(get_db_dep),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Retrieves a previously generated prediction by ID.
+    """
+
+    repo = PredictionRepository(database)
+
+    prediction = repo.get_by_prediction_id(
+        prediction_id
+    )
+
+    if not prediction:
+        raise HTTPException(
+            status_code=404,
+            detail="Prediction not found.",
+        )
+
+    return PredictionDetailResponse(
+        **prediction
+    )

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PredictionResult from '../components/prediction/PredictionResult'
 import { usePredictEmployee } from '../hooks/usePredictEmployee'
 
 const initialFormData = {
@@ -65,7 +66,8 @@ function IndividualPrediction() {
     const nextErrors = {}
 
     if (formData.Age < 18 || formData.Age > 100) {
-      nextErrors.Age = 'Age must be between 18 and 100.'
+      nextErrors.Age =
+        'Age must be between 18 and 100.'
     }
 
     if (formData.MonthlyIncome < 0) {
@@ -78,7 +80,10 @@ function IndividualPrediction() {
         'Years at company cannot be negative.'
     }
 
-    if (formData.YearsAtCompany > formData.TotalWorkingYears) {
+    if (
+      formData.YearsAtCompany >
+      formData.TotalWorkingYears
+    ) {
       nextErrors.YearsAtCompany =
         'Years at company cannot exceed total working years.'
     }
@@ -103,8 +108,8 @@ function IndividualPrediction() {
     try {
       await predictEmployee(formData)
     } catch {
-      // TanStack Query exposes the mutation error through `error`.
-      // The UI renders it using `isError` and `error`.
+      // TanStack Query exposes the mutation error
+      // through isError and error.
     }
   }
 
@@ -120,12 +125,15 @@ function IndividualPrediction() {
         </h1>
 
         <p className="mt-2 text-sm text-slate-600">
-          Enter employee information to prepare an attrition
-          prediction request.
+          Enter employee information to prepare an
+          attrition prediction request.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-8 space-y-6"
+      >
         <FormSection
           title="Employee Information"
           description="Basic employee demographic information."
@@ -153,7 +161,11 @@ function IndividualPrediction() {
             name="MaritalStatus"
             value={formData.MaritalStatus}
             onChange={handleChange}
-            options={['Single', 'Married', 'Divorced']}
+            options={[
+              'Single',
+              'Married',
+              'Divorced',
+            ]}
           />
 
           <NumberField
@@ -440,7 +452,8 @@ function IndividualPrediction() {
               role="alert"
               className="text-sm text-red-600"
             >
-              {error?.message || 'Prediction failed.'}
+              {error?.message ||
+                'Prediction failed.'}
             </p>
           )}
 
@@ -462,22 +475,16 @@ function IndividualPrediction() {
         </div>
       </form>
 
-      {prediction && (
-        <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="font-semibold text-slate-900">
-            Prediction Result
-          </h2>
-
-          <pre className="mt-4 overflow-auto rounded-lg bg-slate-50 p-4 text-xs text-slate-700">
-            {JSON.stringify(prediction, null, 2)}
-          </pre>
-        </section>
-      )}
+      <PredictionResult prediction={prediction} />
     </section>
   )
 }
 
-function FormSection({ title, description, children }) {
+function FormSection({
+  title,
+  description,
+  children,
+}) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6">
       <h2 className="font-semibold text-slate-900">
@@ -561,7 +568,10 @@ function SelectField({
         className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       >
         {options.map((option) => (
-          <option key={option} value={option}>
+          <option
+            key={option}
+            value={option}
+          >
             {option}
           </option>
         ))}

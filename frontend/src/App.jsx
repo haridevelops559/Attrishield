@@ -6,60 +6,43 @@ import {
 } from 'react-router-dom'
 
 import AppShell from './components/layout/AppShell'
+import ProtectedRoute from './routes/ProtectedRoute'
+
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import IndividualPrediction from './pages/IndividualPrediction'
+import PredictionDetail from './pages/PredictionDetail'
 import BatchInference from './pages/BatchInference'
+import BatchResults from './pages/BatchResults'
 
 function App() {
   return (
     <BrowserRouter>
-      <AppShell>
-        <Routes>
-          <Route
-            path="/dashboard"
-            element={<Dashboard />}
-          />
+      <Routes>
+        {/* =========================
+            Public Routes
+        ========================== */}
 
-          <Route
-            path="/predict"
-            element={<IndividualPrediction />}
-          />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-          <Route
-            path="/batches"
-            element={<BatchInference />}
-          />
+        {/* =========================
+            Protected Application
+        ========================== */}
 
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppShell />
+            </ProtectedRoute>
+          }
+        >
+          {/* / → /dashboard */}
           <Route
-            path="/analytics"
-            element={
-              <PlaceholderPage title="Analytics" />
-            }
-          />
-
-          <Route
-            path="/features"
-            element={
-              <PlaceholderPage title="Feature Store" />
-            }
-          />
-
-          <Route
-            path="/insights"
-            element={
-              <PlaceholderPage title="AI Insights" />
-            }
-          />
-
-          <Route
-            path="/monitoring"
-            element={
-              <PlaceholderPage title="Monitoring" />
-            }
-          />
-
-          <Route
-            path="/"
+            index
             element={
               <Navigate
                 to="/dashboard"
@@ -68,6 +51,66 @@ function App() {
             }
           />
 
+          {/* Dashboard */}
+          <Route
+            path="dashboard"
+            element={<Dashboard />}
+          />
+
+          {/* Individual prediction form */}
+          <Route
+            path="predict"
+            element={<IndividualPrediction />}
+          />
+
+          {/* Individual prediction detail */}
+          <Route
+            path="predictions/:predictionId"
+            element={<PredictionDetail />}
+          />
+
+          {/* Batch inference upload/history */}
+          <Route
+            path="batches"
+            element={<BatchInference />}
+          />
+
+          {/* Individual batch results */}
+          <Route
+            path="batches/:batchId"
+            element={<BatchResults />}
+          />
+
+          {/* Future modules */}
+          <Route
+            path="analytics"
+            element={
+              <PlaceholderPage title="Analytics" />
+            }
+          />
+
+          <Route
+            path="features"
+            element={
+              <PlaceholderPage title="Feature Store" />
+            }
+          />
+
+          <Route
+            path="insights"
+            element={
+              <PlaceholderPage title="AI Insights" />
+            }
+          />
+
+          <Route
+            path="monitoring"
+            element={
+              <PlaceholderPage title="Monitoring" />
+            }
+          />
+
+          {/* Unknown protected route */}
           <Route
             path="*"
             element={
@@ -77,8 +120,8 @@ function App() {
               />
             }
           />
-        </Routes>
-      </AppShell>
+        </Route>
+      </Routes>
     </BrowserRouter>
   )
 }

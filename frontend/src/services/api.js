@@ -107,6 +107,12 @@ export async function predictIndividualEmployee(employeeData) {
   return result.data
 }
 
+export async function getPrediction(predictionId) {
+  return apiRequest(
+    `/inference/predictions/${predictionId}`,
+  )
+}
+
 export async function getBatches(limit = 50, skip = 0) {
   return apiRequest(`/batches?limit=${limit}&skip=${skip}`)
 }
@@ -151,3 +157,11 @@ export async function createBatch(file) {
 
   return response.json()
 }
+
+export async function getBatchPredictions(batchId) {
+  return apiRequest(
+    `/batches/${batchId}/predictions`,
+  )
+}
+
+

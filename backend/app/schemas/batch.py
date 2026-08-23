@@ -3,7 +3,8 @@ Batch Job Schemas.
 """
 
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel
 
 
 class BatchJobCreateResponse(BaseModel):
@@ -28,3 +29,24 @@ class BatchJobStatusResponse(BaseModel):
     created_at: str
     completed_at: Optional[str] = None
     error: Optional[str] = None
+
+
+class BatchPredictionResponse(BaseModel):
+    prediction_id: str
+    batch_id: str
+    mode: str
+
+    attrition_probability: float
+    attrition_prediction: int
+    selected_threshold: float
+    risk_recommendation: str
+
+    model_version: str
+    feature_version: str
+    latency_ms: float
+
+    engineered_features: Dict[str, Any]
+    raw_features: Optional[Dict[str, Any]] = None
+
+    created_by: Optional[str] = None
+    created_at: Optional[str] = None
