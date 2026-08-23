@@ -1,63 +1,89 @@
 """
 Individual Prediction API Endpoints.
-Executes single-record inference using canonical V3 feature engineering and XGBoost model pipeline.
+
+Executes single-record inference using the canonical V3
+feature engineering and XGBoost model pipeline.
 """
 
-from typing import Dict, Any, Optional
+from typing import Optional
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-)
-
-from backend.app.schemas.inference import (
-    RawEmployeeInput,
-    PredictionResult,
-    PredictionDetailResponse,
-)
+from fastapi import APIRouter, Depends, HTTPException
 from pymongo.database import Database
-from backend.app.schemas.inference import RawEmployeeInput, PredictionResult
+
+from backend.app.api.dependencies import (
+    get_current_user,
+    get_db_dep,
+)
+from backend.app.db.repositories.prediction_repository import (
+    PredictionRepository,
+)
 from backend.app.ml.inference import predict_single_employee
-from backend.app.db.repositories.prediction_repository import PredictionRepository
-from backend.app.api.dependencies import get_db_dep, get_current_user
+from backend.app.schemas.inference import (
+    PredictionDetailResponse,
+    PredictionResult,
+    RawEmployeeInput,
+)
 
-router = APIRouter(prefix="/inference", tags=["ML Inference"])
+router = APIRouter(
+    prefix="/inference",
+    tags=["ML Inference"],
+)
 
 
-@router.post("/predict", response_model=PredictionResult)
+@router.post(
+    "/predict",
+    response_model=PredictionResult,
+)
 def predict_individual_employee(
     payload: RawEmployeeInput,
     database: Optional[Database] = Depends(get_db_dep),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
-    Executes single employee attrition prediction.
-    Enforces canonical V3 feature engineering, XGBoost inference, and threshold evaluation (0.15).
-    Persists prediction log in MongoDB.
+    Execute single employee attrition prediction.
+
+    The original employee attributes are persisted as
+    raw_features so the Analytics engine can later
+    filter/group predictions by HR dimensions.
     """
+
     raw_dict = payload.model_dump()
+
     result = predict_single_employee(raw_dict)
-    
-    # Store prediction log in database
-    pred_doc = {
+
+    prediction_doc = {
         "prediction_id": result.prediction_id,
         "batch_id": None,
         "mode": "individual",
+
+        # IMPORTANT:
+        # Preserve the original employee attributes.
+        "raw_features": raw_dict,
+
+        # Model output.
         "attrition_probability": result.attrition_probability,
         "attrition_prediction": result.attrition_prediction,
         "selected_threshold": result.selected_threshold,
         "risk_recommendation": result.risk_recommendation,
+
+        # Model metadata.
         "model_version": result.model_version,
         "feature_version": result.feature_version,
         "latency_ms": result.latency_ms,
+
+        # V3 engineered features.
         "engineered_features": result.engineered_features,
-        "created_by": current_user["email"]
+
+        # Audit information.
+        "created_by": current_user["email"],
     }
-    repo = PredictionRepository(database)
-    repo.insert_one(pred_doc)
+
+    repository = PredictionRepository(database)
+
+    repository.insert_one(prediction_doc)
 
     return result
+
 
 @router.get(
     "/predictions/{prediction_id}",
@@ -69,12 +95,12 @@ def get_prediction(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Retrieves a previously generated prediction by ID.
+    Retrieve a previously generated prediction by ID.
     """
 
-    repo = PredictionRepository(database)
+    repository = PredictionRepository(database)
 
-    prediction = repo.get_by_prediction_id(
+    prediction = repository.get_by_prediction_id(
         prediction_id
     )
 

@@ -163,5 +163,18 @@ export async function getBatchPredictions(batchId) {
     `/batches/${batchId}/predictions`,
   )
 }
+export async function runAnalyticsQuery(payload) {
+  return apiRequest('/analytics/query', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
 
+export async function getAnalyticsCharts(batchId = null) {
+  const query = batchId
+    ? `?batch_id=${encodeURIComponent(batchId)}`
+    : ''
+
+  return apiRequest(`/analytics/charts${query}`)
+}
 

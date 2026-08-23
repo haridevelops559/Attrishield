@@ -1,5 +1,6 @@
 """
 Prediction Logs Repository Layer.
+
 Manages individual and batch inference prediction records
 in MongoDB with in-memory fallback.
 """
@@ -58,6 +59,8 @@ class PredictionRepository:
                     f"documents: {e}"
                 )
 
+        # Always keep an in-memory copy so the
+        # application can operate without MongoDB.
         _IN_MEMORY_PREDICTIONS.extend(
             docs_copy
         )
@@ -156,6 +159,52 @@ class PredictionRepository:
 
         return results
 
+    def get_all(
+        self,
+        limit: int = 1000,
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent prediction records across
+        both individual and batch inference.
+        """
+
+        if self.collection is not None:
+            try:
+                cursor = (
+                    self.collection
+                    .find(
+                        {},
+                        {
+                            "_id": 0
+                        },
+                    )
+                    .sort(
+                        "created_at",
+                        -1,
+                    )
+                    .limit(limit)
+                )
+
+                return list(cursor)
+
+            except Exception as e:
+                logger.error(
+                    "Error retrieving all predictions "
+                    f"from MongoDB: {e}"
+                )
+
+        # Offline / in-memory fallback.
+        predictions = list(
+            reversed(
+                _IN_MEMORY_PREDICTIONS
+            )
+        )
+
+        for prediction in predictions:
+            prediction.pop("_id", None)
+
+        return predictions[:limit]
+
     def get_monitoring_summary(
         self,
     ) -> Dict[str, Any]:
@@ -201,13 +250,17 @@ class PredictionRepository:
                 if aggregation_result:
                     avg_probability = (
                         aggregation_result[0]
-                        .get("avg_probability")
+                        .get(
+                            "avg_probability"
+                        )
                         or 0.0
                     )
 
                     avg_latency = (
                         aggregation_result[0]
-                        .get("avg_latency")
+                        .get(
+                            "avg_latency"
+                        )
                         or 0.0
                     )
                 else:
@@ -217,22 +270,30 @@ class PredictionRepository:
                 return {
                     "total_predictions":
                         total_count,
+
                     "high_risk_count":
                         high_risk_count,
+
                     "review_rate": (
                         high_risk_count
                         / total_count
                         if total_count > 0
                         else 0.0
                     ),
+
                     "average_attrition_probability":
                         round(
-                            float(avg_probability),
+                            float(
+                                avg_probability
+                            ),
                             4,
                         ),
+
                     "average_latency_ms":
                         round(
-                            float(avg_latency),
+                            float(
+                                avg_latency
+                            ),
                             2,
                         ),
                 }
@@ -243,6 +304,7 @@ class PredictionRepository:
                     f"monitoring summary from MongoDB: {e}"
                 )
 
+        # Offline / in-memory fallback.
         total_count = len(
             _IN_MEMORY_PREDICTIONS
         )
@@ -288,8 +350,10 @@ class PredictionRepository:
         return {
             "total_predictions":
                 total_count,
+
             "high_risk_count":
                 high_risk_count,
+
             "review_rate": round(
                 high_risk_count
                 / total_count,
@@ -297,14 +361,20 @@ class PredictionRepository:
             )
             if total_count > 0
             else 0.0,
+
             "average_attrition_probability":
                 round(
-                    float(avg_probability),
+                    float(
+                        avg_probability
+                    ),
                     4,
                 ),
+
             "average_latency_ms":
                 round(
-                    float(avg_latency),
+                    float(
+                        avg_latency
+                    ),
                     2,
                 ),
         }

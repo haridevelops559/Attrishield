@@ -14,6 +14,7 @@ import IndividualPrediction from './pages/IndividualPrediction'
 import PredictionDetail from './pages/PredictionDetail'
 import BatchInference from './pages/BatchInference'
 import BatchResults from './pages/BatchResults'
+import Analytics from './pages/Analytics'
 
 function App() {
   return (
@@ -84,9 +85,7 @@ function App() {
           {/* Future modules */}
           <Route
             path="analytics"
-            element={
-              <PlaceholderPage title="Analytics" />
-            }
+            element={<Analytics />}          
           />
 
           <Route
