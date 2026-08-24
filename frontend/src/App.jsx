@@ -7,7 +7,7 @@ import {
 
 import AppShell from './components/layout/AppShell'
 import ProtectedRoute from './routes/ProtectedRoute'
-
+import FeatureStore from './pages/FeatureStore'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import IndividualPrediction from './pages/IndividualPrediction'
@@ -92,9 +92,7 @@ function App() {
 
           <Route
             path="features"
-            element={
-              <PlaceholderPage title="Feature Store" />
-            }
+            element={<FeatureStore />}   
           />
 
           <Route

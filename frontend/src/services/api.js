@@ -189,3 +189,44 @@ export async function generateAIInsights(payload) {
   })
 }
 
+export async function getFeatureDefinitions() {
+  return apiRequest('/features/definitions')
+}
+
+export async function getFeatureGroups() {
+  return apiRequest('/features/groups')
+}
+
+export async function getFeatureLineage(featureName = null) {
+  const query = featureName
+    ? `?feature_name=${encodeURIComponent(featureName)}`
+    : ''
+
+  return apiRequest(`/features/lineage${query}`)
+}
+
+export async function getOnlineFeatures(
+  entityId,
+  featureVersion = 'v3',
+) {
+  return apiRequest(
+    `/features/online/${encodeURIComponent(entityId)}?feature_version=${encodeURIComponent(featureVersion)}`,
+  )
+}
+
+export async function getPointInTimeFeatures(payload, featureVersion = 'v3') {
+  return apiRequest(
+    `/features/point-in-time?feature_version=${encodeURIComponent(featureVersion)}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
+}
+
+export async function getFeatureMaterializations(limit = 20) {
+  return apiRequest(
+    `/features/materializations?limit=${encodeURIComponent(limit)}`,
+  )
+}
+
