@@ -15,6 +15,8 @@ import PredictionDetail from './pages/PredictionDetail'
 import BatchInference from './pages/BatchInference'
 import BatchResults from './pages/BatchResults'
 import Analytics from './pages/Analytics'
+import Monitoring from './pages/Monitoring'
+import AIInsights from './pages/AIInsights'
 
 function App() {
   return (
@@ -97,16 +99,13 @@ function App() {
 
           <Route
             path="insights"
-            element={
-              <PlaceholderPage title="AI Insights" />
-            }
+            element={<AIInsights />}
           />
 
           <Route
             path="monitoring"
-            element={
-              <PlaceholderPage title="Monitoring" />
-            }
+            element={<Monitoring />}
+              
           />
 
           {/* Unknown protected route */}
@@ -144,3 +143,4 @@ function PlaceholderPage({ title }) {
 }
 
 export default App
+

@@ -28,13 +28,13 @@ class Settings(BaseSettings):
     METADATA_PATH: str = "artifacts/model_metadata_v3.json"
     
     # Ollama Local LLM
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "qwen2.5:7b"
+    OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_MODEL: str = "qwen2.5:3b"
     OLLAMA_TIMEOUT_SECONDS: int = 60
     
     # Seed Admin Credentials
     SEED_ADMIN_EMAIL: str = "admin@attrishield.com"
-    SEED_ADMIN_PASSWORD: str = "AdminPass123!"
+    SEED_ADMIN_PASSWORD: str = "riskbeda12@"
     SEED_ADMIN_NAME: str = "HR Administrator"
     
     # CORS

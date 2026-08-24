@@ -178,3 +178,14 @@ export async function getAnalyticsCharts(batchId = null) {
   return apiRequest(`/analytics/charts${query}`)
 }
 
+export async function getMonitoringMetrics() {
+  return apiRequest('/monitoring/metrics')
+}
+
+export async function generateAIInsights(payload) {
+  return apiRequest('/ollama/insights', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
