@@ -1,182 +1,474 @@
-# AttriShield — Employee Attrition Risk Decision-Support System
+# AttriShield — Employee Attrition Risk AI Platform
 
-AttriShield is an end-to-end machine-learning decision-support prototype for prioritizing employee attrition-risk reviews and generating explainable retention insights. Rather than treating attrition prediction as an accuracy-only task, the project frames it as an imbalanced, cost-sensitive classification problem.
+> **End-to-end AI engineering platform for explainable attrition-risk prediction, combining leakage-safe ML experimentation, cost-sensitive XGBoost inference, versioned features, and production AI serving.**
 
-> **Responsible use:** This is a portfolio prototype for decision support only. It must not be used to make automated employment decisions.
+AttriShield demonstrates the **full ML lifecycle**: leakage-safe feature engineering, stratified cross-validation with fold-level SMOTE, PR-AUC-driven model benchmarking, **cost-aware threshold optimization**, calibration and error analysis, SHAP explainability, feature ablation, MLflow experiment tracking, and a **versioned Feature Store with point-in-time retrieval**.
 
-## Key Features
+The production system serves these capabilities through **FastAPI + Pydantic** APIs for single/batch inference, analytics, monitoring and feature access, with a **React + Vite + TanStack Query + Zod** frontend for dashboard, individual-risk, batch, monitoring and AI-insight workflows. **Ollama with deterministic analytics fallback** provides the optional LLM insight layer.
 
-* Leakage-safe machine-learning pipeline with stratified train/test split and stratified 5-fold cross-validation
-* SMOTE applied only within training folds to prevent synthetic-data leakage
-* Controlled V1 → V2 → V3 feature-pipeline experiments
-* Model benchmarking using PR-AUC, ROC-AUC, precision, recall, and F1-score
-* Cost-sensitive threshold optimization for recall-oriented risk prioritization
-* Calibration reliability analysis using Brier Score and Expected Calibration Error
-* Global and local SHAP explanations for model transparency
-* Structured false-positive and false-negative error analysis
-* Feature-ablation studies to measure feature-group contribution
-* MLflow experiment tracking, artifact logging, and model versioning
-* FastAPI single/batch inference, Streamlit dashboard, and Gemini-powered retention insights
+> ⚠️ **Responsible AI:** Portfolio decision-support prototype only. Model outputs must not be used to make automated employment decisions.
 
-## Dataset
+---
 
-**IBM HR Analytics Employee Attrition Dataset**
+## ⚡ End-to-End System
 
-* 1,470 employee records
-* 35+ HR attributes
-* Features include demographics, compensation, role, satisfaction, travel, tenure, and work-life indicators
-* Binary target: employee attrition (`Stay` / `Leave`)
+| System Area | Frontend | Backend / AI | Engineering Responsibility |
+|---|---|---|---|
+| **Dashboard** | React · TanStack Query | FastAPI · Analytics APIs | Risk KPIs, attrition trends, model performance and system metrics |
+| **Individual Risk** | React · Zod · TanStack Query | FastAPI · XGBoost · SHAP | Single-employee prediction, probability, risk level and explanations |
+| **Batch Prediction** | React · File/Data Upload | FastAPI · Batch Inference | Bulk scoring, validation, prediction results and review prioritization |
+| **Monitoring** | React · TanStack Query | FastAPI · Monitoring APIs | Model/runtime health, prediction activity and operational metrics |
+| **Feature Store** | React Feature Views | FastAPI · MongoDB | Feature definitions, versions, materialization and point-in-time retrieval |
+| **AI Insights** | React Insight UI | Ollama · Deterministic Fallback | Retention insights grounded in model predictions and analytics |
+| **Authentication** | React Auth Context | FastAPI Auth APIs · JWT | Login, token handling and protected application routes |
+| **Model Serving** | API-driven UI | FastAPI · Uvicorn · XGBoost | Production model loading and single/batch inference |
+| **Explainability** | Risk + explanation views | SHAP | Global feature importance and local prediction explanations |
+| **Validation** | Zod | Pydantic | Typed request/response validation across frontend and backend |
+| **Server State** | TanStack Query | REST APIs | API caching, loading/error states and query synchronization |
+| **Data Layer** | React data views | MongoDB · Feature Store | Persistent feature values, metadata and versioned data |
+| **ML Pipeline** | — | Scikit-learn · XGBoost · SMOTE | Leakage-safe training, CV, imbalance handling and benchmarking |
+| **Model Evaluation** | — | PR-AUC · ROC-AUC · Calibration | Threshold optimization, error analysis and reliability evaluation |
+| **MLOps** | — | MLflow · Model Artifacts | Experiment tracking, metrics, configurations and model metadata |
+| **Deployment** | React/Vite build | FastAPI service | Railway-based frontend/backend deployment and environment configuration |
 
-## From the Original Version to V3
-
-The original project used manual preprocessing, changing train/test splits, accuracy-led comparison, and a basic Streamlit demo.
-
-The upgraded workflow uses fixed seeds, an untouched test set, stratified cross-validation, leakage-safe SMOTE, PR-AUC-based model selection, controlled feature experiments, calibration checks, error analysis, SHAP explanations, ablation studies, MLflow tracking, and a threshold-aware deployment workflow.
-
-| Version | Pipeline                             |                                   Result |
-| ------- | ------------------------------------ | ---------------------------------------: |
-| V1      | Baseline/raw feature pipeline        |       Established leakage-safe benchmark |
-| V2      | Engineered features + raw `OverTime` |     CV PR-AUC: 0.621; Test PR-AUC: 0.523 |
-| V3      | Engineered features − raw `OverTime` | **CV PR-AUC: 0.625; Test PR-AUC: 0.544** |
-
-## Why V3 Was Selected
-
-V3 retained the engineered overtime and commute signals while removing the raw `OverTime` feature. It was selected because it produced better cross-validation and untouched-test PR-AUC than V2 while using a simpler feature set.
-
-The final V3 model uses XGBoost with stratified 5-fold cross-validation and SMOTE inside each training fold.
-
-## Model Benchmarking
-
-Models were evaluated using metrics appropriate for imbalanced classification.
-
-| Model               | CV Accuracy | CV Precision | CV Recall | CV F1 | CV ROC-AUC | CV PR-AUC |
-| ------------------- | ----------: | -----------: | --------: | ----: | ---------: | --------: |
-| Logistic Regression |       0.777 |        0.398 |     0.711 | 0.507 |  **0.831** |     0.623 |
-| XGBoost             |   **0.876** |    **0.724** |     0.389 | 0.499 |      0.816 | **0.625** |
-| Random Forest       |       0.875 |        0.720 |     0.358 | 0.467 |      0.817 |     0.587 |
-| Decision Tree       |       0.790 |        0.364 |     0.389 | 0.392 |      0.691 |     0.333 |
-
-XGBoost was selected as the final candidate because it delivered the strongest PR-AUC, balancing ranking quality with a deployable tree-based model.
-
-## Threshold Optimization
-
-The default probability threshold of `0.50` was not assumed to be operationally optimal.
-
-A cost-sensitive threshold analysis used:
+---
+## 🏗️ End-to-End Application + ML Architecture
 
 ```text
-False Negative Cost = 5
-False Positive Cost = 1
-```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              REACT FRONTEND                                  │
+│                         React + Vite + TypeScript                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Login                                                                       │
+│    │                                                                         │
+│    ▼                                                                         │
+│  Auth Context ── JWT / Session ── Protected Routes                          │
+│    │                                                                         │
+│    ├────────────── Dashboard ──────────────┐                                │
+│    │                                        │                                │
+│    ├──────── Individual Risk ───────────────┤                                │
+│    │                                        │                                │
+│    ├──────── Batch Prediction ──────────────┤                                │
+│    │                                        │                                │
+│    ├──────── Monitoring ────────────────────┤                                │
+│    │                                        │                                │
+│    ├──────── Feature Store ─────────────────┤                                │
+│    │                                        │                                │
+│    └──────── AI Insights ───────────────────┘                                │
+│                                                                              │
+│  TanStack Query → API fetching / caching / synchronization                   │
+│  Zod           → client-side validation                                      │
+│  React Router  → application routing / protected views                       │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                              HTTPS / REST
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              FASTAPI BACKEND                                 │
+│                    FastAPI + Pydantic + Uvicorn                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Authentication API                                                          │
+│       │                                                                      │
+│       ├── Login / Token Validation                                           │
+│       └── Protected API Routes                                               │
+│                                                                              │
+│  Dashboard / Analytics API                                                   │
+│       │                                                                      │
+│       ├── Risk KPIs                                                         │
+│       ├── Attrition Analytics                                                │
+│       └── Model / Prediction Statistics                                      │
+│                                                                              │
+│  Inference API                                                               │
+│       │                                                                      │
+│       ├── Single Employee Prediction                                         │
+│       └── Batch Prediction                                                   │
+│                                                                              │
+│  Explanation API                                                             │
+│       │                                                                      │
+│       └── SHAP / Feature Contributions                                        │
+│                                                                              │
+│  Feature Store API                                                           │
+│       │                                                                      │
+│       ├── Feature Definitions                                                │
+│       ├── Feature Versions                                                   │
+│       ├── Materialization                                                    │
+│       └── Point-in-Time Retrieval                                             │
+│                                                                              │
+│  Monitoring API                                                              │
+│       │                                                                      │
+│       └── Model / Runtime / Prediction Metrics                               │
+│                                                                              │
+│  AI Insights API                                                             │
+│       │                                                                      │
+│       └── Grounded Retention Insights                                        │
+│                                                                              │
+│  Pydantic → request / response validation                                    │
+│  FastAPI  → typed REST API + OpenAPI                                         │
+│  Uvicorn  → ASGI application runtime                                         │
+└───────────────┬───────────────────────┬───────────────────────┬──────────────┘
+                │                       │                       │
+                ▼                       ▼                       ▼
+┌──────────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
+│    ML INFERENCE      │   │    FEATURE STORE     │   │     AI INSIGHTS      │
+├──────────────────────┤   ├──────────────────────┤   ├──────────────────────┤
+│                      │   │                      │   │                      │
+│  XGBoost V3          │   │  MongoDB             │   │  Ollama              │
+│       │              │   │       │              │   │       │              │
+│       ▼              │   │       ▼              │   │       ▼              │
+│  Risk Probability    │   │  Versioned Features  │   │  LLM Insight         │
+│       │              │   │       │              │   │                      │
+│       ▼              │   │       ▼              │   │  If unavailable      │
+│  Threshold = 0.15    │   │  Point-in-Time       │   │       ↓              │
+│       │              │   │  Retrieval            │   │  Deterministic       │
+│       ▼              │   │                      │   │  Analytics Fallback  │
+│  Risk Classification │   │  Feature Lineage     │   │                      │
+│                      │   │  + Materialization   │   │  Grounded by model   │
+│  SHAP Explanations   │   │                      │   │  + analytics data    │
+└──────────────────────┘   └──────────────────────┘   └──────────────────────┘
+                │
+                ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              ML PIPELINE                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IBM HR Analytics Dataset                                                    │
+│             │                                                                │
+│             ▼                                                                │
+│  Feature Engineering                                                        │
+│             │                                                                │
+│             ▼                                                                │
+│  Stratified Train / Test Split                                               │
+│             │                                                                │
+│             ▼                                                                │
+│  Stratified 5-Fold Cross Validation                                          │
+│             │                                                                │
+│             ▼                                                                │
+│  SMOTE inside training folds only                                            │
+│             │                                                                │
+│             ▼                                                                │
+│  Model Benchmarking                                                          │
+│      ┌────────────┬──────────────┬──────────────┐                            │
+│      │ Logistic   │ XGBoost      │ Random       │                            │
+│      │ Regression │              │ Forest       │                            │
+│      └────────────┴──────────────┴──────────────┘                            │
+│             │                                                                │
+│             ▼                                                                │
+│       XGBoost V3                                                              │
+│             │                                                                │
+│      ┌──────┼───────────┬────────────┐                                       │
+│      ▼      ▼           ▼            ▼                                       │
+│  PR-AUC  Calibration  SHAP       Ablation                                    │
+│      │      │           │            │                                       │
+│      └──────┴───────────┴────────────┘                                       │
+│                     │                                                        │
+│                     ▼                                                        │
+│          Cost-Sensitive Threshold                                            │
+│              FN Cost = 5                                                     │
+│              FP Cost = 1                                                     │
+│              Threshold = 0.15                                                │
+│                     │                                                        │
+│                     ▼                                                        │
+│              Model Artifact                                                   │
+└─────────────────────┬────────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              MLOps                                           │
+│                                 MLflow                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Experiments · Parameters · Feature Versions · CV Results · PR-AUC           │
+│  ROC-AUC · Threshold · Calibration · Artifacts · Model Metadata              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 
-The selected operating threshold was **0.15** because missed attrition cases were treated as more costly than additional HR review alerts.
+````
+## 🧠 ML Engineering — Implementation Nuances
 
-### Final V3 Untouched-Test Results
+| Area | Implementation | Engineering Signal |
+|---|---|---|
+| Data Split | Stratified train/test split + fixed seed | Reproducible evaluation |
+| Cross-Validation | Stratified 5-fold CV | Robust model comparison |
+| Imbalance | SMOTE **inside training folds only** | Prevents synthetic-data leakage |
+| Feature Engineering | Controlled V1 → V2 → V3 pipelines | Reproducible feature experiments |
+| Model Selection | Logistic Regression · XGBoost · Random Forest · Decision Tree | Comparative benchmarking |
+| Primary Metric | PR-AUC | Appropriate for imbalanced attrition target |
+| Thresholding | Cost-sensitive threshold = `0.15` | Recall-oriented business trade-off |
+| Calibration | Brier Score + ECE + reliability analysis | Probability quality |
+| Explainability | Global + local SHAP | Model transparency |
+| Error Analysis | FP / FN segmentation | Failure-mode analysis |
+| Ablation | Remove feature groups individually | Feature contribution measurement |
+| Model Artifact | Versioned V3 pipeline/model | Reproducible inference |
+| Experiment Tracking | MLflow | Parameters · metrics · artifacts |
+| Feature Lifecycle | Versioned Feature Store + PIT retrieval | Training/serving consistency |
 
-| Metric             | Score |
-| ------------------ | ----: |
-| Accuracy           | 0.779 |
-| Precision          | 0.385 |
-| Recall             | 0.638 |
-| F1-score           | 0.480 |
-| ROC-AUC            | 0.806 |
-| PR-AUC             | 0.544 |
-| Selected threshold |  0.15 |
+---
 
-## Confusion-Matrix Analysis
+## ⚛️ Frontend Engineering
 
-At the recall-oriented threshold of `0.15`, the final V3 model produced:
+| Area | Implementation | Purpose |
+|---|---|---|
+| UI | React | Component-based application |
+| Build | Vite | Fast development/build pipeline |
+| Routing | React Router | Dashboard + protected application routes |
+| Authentication | Auth Context + JWT/session handling | Application authentication state |
+| Server State | TanStack Query | API caching · fetching · synchronization |
+| Validation | Zod | Runtime input/data validation |
+| Dashboard | React + API queries | KPIs · attrition analytics · model metrics |
+| Individual Risk | React + FastAPI | Employee risk · probability · SHAP explanations |
+| Batch | React upload/data workflow | Bulk prediction and result review |
+| Monitoring | React + API data | Runtime/model/prediction monitoring |
+| Feature Store | React feature views | Feature versions · metadata · retrieval |
+| AI Insights | React insight interface | LLM/fallback retention insights |
+| API Errors | Query/mutation error states | Loading · failure · retry UX |
 
-| Actual / Predicted | Stay | Leave |
-| ------------------ | ---: | ----: |
-| Stay               |  199 |    48 |
-| Leave              |   17 |    30 |
+---
 
-The model identified **30 of 47** employees who actually left. The trade-off was **48 false-positive review alerts**, which is expected because the selected threshold favors recall over precision.
+## ⚙️ Backend & API Engineering
 
-## Calibration and Reliability
+| Area | Implementation | Purpose |
+|---|---|---|
+| API Framework | FastAPI | REST API + service orchestration |
+| Runtime | Uvicorn | ASGI production runtime |
+| Schemas | Pydantic | Typed request/response validation |
+| Configuration | Pydantic Settings | Environment-based configuration |
+| Authentication | JWT-based API authentication | Protected endpoints |
+| API Modules | Auth · Inference · Batch · Analytics · Monitoring · Features · AI | Domain separation |
+| Single Inference | FastAPI → XGBoost | Real-time risk prediction |
+| Batch Inference | FastAPI → model pipeline | Bulk scoring |
+| Explainability | FastAPI → SHAP | Prediction-level explanations |
+| Analytics | FastAPI service layer | Aggregated risk/model analytics |
+| Feature APIs | FastAPI → Feature Store | Versioned feature access |
+| Monitoring | FastAPI monitoring endpoints | Operational/model visibility |
+| AI Layer | FastAPI → Ollama/fallback | Grounded AI insights |
+| API Contract | OpenAPI | Discoverable typed API surface |
 
-The project evaluates whether predicted probabilities are meaningful risk estimates, not only ranking scores.
+---
 
-| Metric                     |  Score |
+## 🗄️ Database & Feature Store
+
+| Area | Implementation | Purpose |
+|---|---|---|
+| Database | MongoDB | Persistent application/feature data |
+| Feature Definitions | Versioned metadata | Reproducible feature contracts |
+| Feature Groups | Logical grouping | Manage related features |
+| Feature Versions | V1/V2/V3 | Model-compatible feature evolution |
+| Materialization | Persist computed features | Serving-ready feature values |
+| Lineage | Feature metadata | Trace feature origin/version |
+| Point-in-Time Retrieval | `timestamp <= requested_time` | Prevent future-data leakage |
+| Version-Aware Querying | Feature version + timestamp | Reconstruct historical inputs |
+| Serving Consistency | Same feature definitions for training/inference | Reduce training-serving skew |
+
+
+## 🧪 ML Results
+
+### V1 → V2 → V3
+
+| Version | Feature Pipeline            | CV PR-AUC | Test PR-AUC |
+| ------- | --------------------------- | --------: | ----------: |
+| V1      | Baseline/raw                |         — |           — |
+| V2      | Engineered + raw `OverTime` |     0.621 |       0.523 |
+| **V3**  | Engineered − raw `OverTime` | **0.625** |   **0.544** |
+
+**V3** was selected for improved cross-validation and untouched-test PR-AUC while removing a redundant raw feature.
+
+### Model Benchmark
+
+| Model               | CV ROC-AUC | CV PR-AUC |
+| ------------------- | ---------: | --------: |
+| Logistic Regression |  **0.831** |     0.623 |
+| **XGBoost**         |      0.816 | **0.625** |
+| Random Forest       |      0.817 |     0.587 |
+| Decision Tree       |      0.691 |     0.333 |
+
+**Selected model: XGBoost**
+
+---
+
+## 🎚️ Threshold Optimization
+
+The default `0.50` threshold was not assumed to be operationally optimal.
+
+| Parameter           |     Value |
+| ------------------- | --------: |
+| False Negative Cost |         5 |
+| False Positive Cost |         1 |
+| Selected Threshold  |  **0.15** |
+| Test Accuracy       |     0.779 |
+| Test Precision      |     0.385 |
+| Test Recall         | **0.638** |
+| Test F1             |     0.480 |
+| Test ROC-AUC        |     0.806 |
+| Test PR-AUC         |     0.544 |
+
+At threshold `0.15`, the model identified **30/47 actual attrition cases** with **48 false-positive review alerts**.
+
+---
+
+## 🔍 Explainability & Reliability
+
+| Component      | Purpose                                       |
+| -------------- | --------------------------------------------- |
+| SHAP           | Global and individual prediction explanations |
+| Calibration    | Probability reliability                       |
+| Error Analysis | False-positive / false-negative analysis      |
+| Ablation       | Feature-group contribution                    |
+
+| Calibration Metric         | Result |
 | -------------------------- | -----: |
 | Brier Score                | 0.1049 |
 | Expected Calibration Error | 0.0564 |
 
-Reliability-bin analysis was also performed to compare predicted attrition risk against observed attrition frequency.
+### Feature Ablation
 
-## Explainability and Error Analysis
+| Removed Feature Group    | PR-AUC Change |
+| ------------------------ | ------------: |
+| Satisfaction             |    **-0.069** |
+| Compensation / Seniority |        -0.035 |
+| Travel / Commute         |        -0.014 |
+| Raw `OverTime`           |         0.000 |
 
-### SHAP Explainability
+---
 
-The final model includes:
+## 🗃️ Feature Store
 
-* Global SHAP feature importance
-* Local SHAP explanation for the highest-risk untouched-test employee
-* Feature-contribution analysis for individual predictions
+The platform includes a versioned Feature Store supporting:
 
-Important signals included overtime-derived features, satisfaction, stock options, job level, commute burden, age, and job-role indicators.
+| Capability              | Purpose                     |
+| ----------------------- | --------------------------- |
+| Feature definitions     | Central feature metadata    |
+| Feature groups          | Logical organization        |
+| Feature versions        | V1/V2/V3 management         |
+| Materialization         | Persist feature values      |
+| Lineage                 | Track feature origins       |
+| Point-in-Time retrieval | Prevent future-data leakage |
+| Version-aware queries   | Reproduce model inputs      |
 
-### Structured Error Analysis
+Example:
 
-Predictions were grouped into:
+```text
+Feature Version: v3
+Employee: emp_1
 
-* True Positives
-* True Negatives
-* False Positives
-* False Negatives
-
-False-positive and false-negative cases were reviewed across overtime, business travel, department, job role, age, income, satisfaction, and tenure to identify failure patterns and limitations.
-
-## Feature Ablation Study
-
-Feature groups were removed one at a time and evaluated using cross-validated PR-AUC.
-
-| Removed Feature Group    | PR-AUC Change vs. Full Model | Interpretation                                 |
-| ------------------------ | ---------------------------: | ---------------------------------------------- |
-| Satisfaction signals     |                       -0.069 | Largest contribution to predictive performance |
-| Compensation / seniority |                       -0.035 | Meaningful contribution                        |
-| Travel / commute         |                       -0.014 | Smaller but measurable contribution            |
-| Raw `OverTime`           |                        0.000 | Redundant after engineered overtime features   |
-
-The ablation study supports the V3 decision: engineered overtime signals retained useful information while the raw overtime field did not add measurable value.
-
-## Experiment Tracking
-
-MLflow tracks:
-
-* Feature version and experiment configuration
-* Random seed, split strategy, CV folds, and SMOTE configuration
-* Model parameters and evaluation metrics
-* Threshold and business-cost assumptions
-* Calibration metrics, plots, and diagnostic artifacts
-* Final V3 model version
-
-## Deployment
-
-The existing application supports:
-
-* FastAPI inference for single and batch predictions
-* Streamlit interface for HR decision support
-* SHAP-based explanations
-* Gemini-powered retention insights
-* Threshold-aware attrition-risk recommendations
-
-## How to Run
-
-```bash
-pip install -r requirements.txt
-streamlit run streamlit_app.py
+IncomePerJobLevel = 2539.4
+OverTimeBinary    = 0
 ```
 
-## Tech Stack
+---
 
-`Python` · `Pandas` · `NumPy` · `Scikit-learn` · `XGBoost` · `imbalanced-learn` · `SHAP` · `MLflow` · `FastAPI` · `Streamlit` · `Gemini API`
 
-## Limitations and Future Work
 
-* The IBM dataset is a public benchmark and may not represent a real organization.
-* Attrition labels may reflect factors unavailable in the dataset.
-* Predictions should support human review, not automate employment decisions.
-* Future work includes fairness analysis, drift monitoring, feedback collection, and scheduled retraining.
 
+---
+
+
+
+---
+
+## 📁 Repository Structure
+
+```text
+AttriShield/
+├── backend/
+│   ├── app/
+│   │   ├── api/routes/
+│   │   ├── core/
+│   │   ├── feature_store/
+│   │   └── main.py
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   └── services/
+│   └── package.json
+│
+├── notebooks/
+│   └── attrishield_ml_experiment_v3.ipynb
+│
+├── artifacts/
+│   ├── attrishield_pipeline_v3.joblib
+│   └── model_metadata_v3.json
+│
+├── docs/
+└── README.md
+```
+
+---
+
+## ▶️ Run Locally
+
+| Service | Commands | URL |
+|---|---|---|
+| **Backend** | `cd backend` → `pip install -r requirements.txt` → `uvicorn app.main:app --reload` | http://localhost:8000 |
+| **API Docs** | — | http://localhost:8000/docs |
+| **Frontend** | `cd frontend` → `npm install` → `npm run dev` | http://localhost:5173 |
+
+---
+
+## 🌐 Live Deployment
+
+| Service | Platform | URL |
+|---|---|---|
+| **Frontend** | Railway | https://attrishield-production-5133.up.railway.app |
+| **Backend API** | Railway | https://attrishield-production.up.railway.app |
+| **API Docs** | Railway | https://attrishield-production.up.railway.app/docs |
+| **Production API Base** | Railway | `https://attrishield-production.up.railway.app/api/v1` |
+
+---
+
+## 🔐 Environment & Credentials
+
+| Environment | Configuration |
+|---|---|
+| **Local** | `.env` / local environment variables |
+| **Production** | Railway service variables |
+| **Frontend API** | `VITE_API_BASE_URL` |
+| **Backend Secrets** | JWT, database, model and AI configuration via environment variables |
+| **Credentials** | Not committed to GitHub |
+
+> **Security:** `.env` files, passwords, API keys, database credentials and production secrets must never be committed to the repository.
+
+## ⚠️ Limitations
+
+| Area           | Limitation                                                                  |
+| -------------- | --------------------------------------------------------------------------- |
+| Dataset        | IBM HR Analytics is a public benchmark                                      |
+| Generalization | Results may not represent real organizations                                |
+| Bias           | Predictions may contain statistical/data biases                             |
+| Threshold      | Business costs are illustrative                                             |
+| LLM            | AI insights are optional and not authoritative                              |
+| Production     | Requires organization-specific validation, fairness, privacy and governance |
+
+---
+
+## 🔮 Future Work
+
+| Area           | Planned Work                         |
+| -------------- | ------------------------------------ |
+| MLOps          | Model registry + automated promotion |
+| Monitoring     | Data / feature / model drift         |
+| Responsible AI | Fairness evaluation                  |
+| Retraining     | Automated retraining pipeline        |
+| Testing        | API contracts + integration tests    |
+| Deployment     | CI/CD                                |
+| AI             | Production-grade managed LLM         |
+| Governance     | Feedback + model monitoring          |
+
+---
+
+## Responsible AI
+
+AttriShield is a **decision-support prototype**, not an automated employment decision system.
+
+Predictions should be treated as statistical signals requiring qualified human review and appropriate organizational context.
+
+```
+```
