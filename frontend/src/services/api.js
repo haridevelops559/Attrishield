@@ -3,7 +3,7 @@ import {
   PredictionResponseSchema,
 } from '../schemas/apiSchemas'
 
-const API_BASE_URL = '/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 export async function apiRequest(path, options = {}) {
   const token = getAccessToken()
